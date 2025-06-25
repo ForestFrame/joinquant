@@ -1,8 +1,8 @@
 from data_fetch import get_orderbook_summary
-from datetime import datetime, timedelta
-from jqdatasdk import *
+from datetime import datetime, timedelta, time
+import requests
+import jqdata
 
-auth('13367910668','YZR0803lonely')
 
 def initialize(context):
     # 初始化此策略
@@ -205,10 +205,16 @@ def buy_stocks(context, stocks):
     tick_data = get_current_tick(jq_codes)
 
     for jq_code in jq_codes:
+        # 如果已经chi'c
         if jq_code in g.bought_stocks:
             continue
 
-        if context.portfolio.available_cash < 1000:
+       # 直接获取时间（因为 context.current_dt 已经是 datetime 对象）
+        current_time = context.current_dt.time()
+    
+        # 判断条件：如果可用金额小于1000元或十点之后可用金额占总金额的比例小于50%则不再买入
+        if (context.portfolio.available_cash < 1000) or \
+            (current_time > time(10, 0) and context.portfolio.available_cash / context.portfolio.total_value < 0.5):
             return
 
         code, name = code_map[jq_code]
